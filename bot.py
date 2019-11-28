@@ -87,6 +87,14 @@ class Genesis(cmd.Bot):
     ###########METHODS
    
     def run(self):
+    
+        dir = os.path.join(sys.path[0], "cogs")
+        files = [f for f in os.listdir(dir) if os.path.isfile(os.path.join(dir, f))]
+        for f in files:
+            cog = "cogs." + f.split(".")[0]
+            self.cogs_.append(cog)
+            
+    
         for ext in self.cogs_:
             try:
                 self.load_extension(ext)
@@ -112,7 +120,7 @@ async def ping(ctx):
         duration = (end - start) * 1000
         tytimend = time.perf_counter()
         tydur = (tytimend -tytime) * 1000
-        await m.edit(content=f'Pong!\nMessage send time = {duration:.2f}ms\nBot latency = {bot.latency*1000:.2f}\nCommand call time = {tydur:.2f}\nAverage = {((duration+tydur+ bot.latency*1000)/3):.2f}')
+        await m.edit(content=f'Pong!\nMessage send time = {duration:.2f}ms\nBot latency = {gen.latency*1000:.2f}\nCommand call time = {tydur:.2f}\nAverage = {((duration+tydur+ gen.latency*1000)/3):.2f}')
         
 if __name__ == "__main__":
     gen.run()
