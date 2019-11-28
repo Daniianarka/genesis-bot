@@ -17,11 +17,11 @@ class Information(cmd.Cog):
     async def _user(self, ctx):
         """Retrieves several info pieces from user."""
         if ctx.invoked_subcommand is None:
-            await ctx.send(f"Please do {ctx.prefix} help user for correct usage.")
+            await ctx.send(f"Please do {ctx.prefix}help user for correct usage.")
             
-    @cmd.command(aliases=["sinfo"])
+    @cmd.command(name="servinfo", aliases=["sinfo"])
     @cmd.guild_only()
-    async def servinfo(self, ctx):
+    async def _servinfo(self, ctx):
         """Displays info about the server."""
         g = ctx.guild
         if g.mfa_level:
@@ -29,7 +29,7 @@ class Information(cmd.Cog):
         else:
             a = ":x:"
         members = [x for x in g.members if not x.bot]
-        bots = g.members - members
+        bots = list(set(g.members) - set(members))
         e = discord.Embed(title="SERVER INFO", color=discord.Colour.from_hsv(random.random(), 1, 1))
         e.set_thumbnail(url=g.icon_url)
         e.add_field(name="Name", value=g.name)
@@ -37,66 +37,70 @@ class Information(cmd.Cog):
         e.add_field(name="Created at", value=g.created_at.replace(microsecond=0), inline=False)
         e.add_field(name="Members", value=len(members))
         e.add_field(name="Bots", value=len(bots))
-        e.add_field(name="Channels", value=len(g.channels)
+        e.add_field(name="Channels", value=len(g.channels))
         e.add_field(name="Emotes", value=len(g.emojis), inline=False)
         e.add_field(name="2FA administration?", value=a, inline=False)
         e.add_field(name="Nitro Boost Tier", value=g.premium_tier)
         await ctx.send(embed=e)
 
     @cmd.command(name="about")
-    async def bot_info(self, ctx):
+    async def _about(self, ctx):
         """Displays info about me~"""
         color = ctx.me.color if ctx.guild else discord.Colour.from_hsv(random.random(), 1, 1)
         e = discord.Embed(title=str(self.bot.user), color=color)
         e.set_thumbnail(url=self.bot.user.avatar_url)
         nick = "None" if not ctx.me.nick else ctx.me.nick
         e.add_field(name="Nickname", value=nick)
-        e.add_field(name="ID", value=ctx.bot.id)
-        e.add_field(name="Created at", value=self.bot.user.created_at.replace(microsecond=0))
+        e.add_field(name="ID", value=ctx.bot.user.id)
+        e.add_field(name="Created at", value=self.bot.user.created_at.replace(microsecond=0), inline=False)
         e.add_field(name="Servers", value=len(self.bot.guilds))
         e.add_field(name="Members", value=len(self.bot.users))
         e.add_field(name="Emotes available", value=len(self.bot.emojis))
+        e.add_field(name="GitHub repo", value=self.bot.url, inline=False)
         await ctx.send(embed=e)
 
-    @user.command(name="info")
+    @_user.command(name="info")
     async def user_info(self, ctx, *, author: converters.CustomUser = None):
         """Sends general info about the author, or a selected user/ID."""
-        if author is None:
-            author = ctx.author
+        author = ctx.author if not author else author
         avatar = author.avatar_url
-        if avatar == None:
-            avatar = author.default_avatar_url
+        avatar = author.default_avatar_url if not avatar else avatar
         if isinstance(author, discord.Member):
             nick = author.display_name
             join = author.joined_at.replace(microsecond=0)
             r = "Member (in this server)"
             color = author.colour
+            tr = f"{author.top_role} ({author.top_role.id})"
+            if author == ctx.guild.owner:
+                adm = "Yes, owner"
+            elif author.guild_permissions.administrator:
+                adm = "Yes"
+            else:
+                adm = "No"
         else:
             nick = "**-**"
             join = "**-**"
             r = "User (not in this server)"
             color = discord.Colour.from_hsv(random.random(), 1, 1)
-        if author.premium:
-            if author.premium_type is discord.PremiumType.classic:
-                prem = "Yes, Classic"
-            else:
-                prem = "Yes"
-        else:
-            prem = "No"
+            tr = "**-**"
+            adm = "**-**"
+        isbot = "Yes" if author.bot else "No"
         e = discord.Embed(title="User Info", color=color)
         e.set_thumbnail(url=avatar)
         e.add_field(name="User#Disc", value=author)
         e.add_field(name="ID", value=author.id)
-        e.add_field(name="Nickname", value=nick)
-        e.add_field(name="Created at", value=author.created_at.replace(microsecond=0))
+        e.add_field(name="Nickname", value=nick, inline=False)
+        e.add_field(name="Bot?", value=isbot)
+        e.add_field(name="Created at", value=author.created_at.replace(microsecond=0), inline=False)
         e.add_field(name="Joined at", value=join)
         e.add_field(name="User or Member?", value=r, inline=False)
-        e.add_field(name="Nitro user?", value=prem, inline=False)
-        e.add_field(name="Avatar URL", value=str(avatar))
+        e.add_field(name="Top role", value=tr)
+        e.add_field(name="Admin?", value=adm)
+        e.add_field(name="Avatar URL", value=str(avatar), inline=False)
         await ctx.send(embed=e)
 
-    @user.command(aliases=["pfp", "pic"])
-    async def avatar(self, ctx, *, msg: converters.CustomUser = None):
+    @_user.command(name="avatar", aliases=["pfp", "pic"])
+    async def _avatar(self, ctx, *, msg: converters.CustomUser = None):
         """Messages a member's (or the author's) avatar back."""
         if msg is None:
             async with self.session.get(str(ctx.author.avatar_url)) as resp:
@@ -109,7 +113,7 @@ class Information(cmd.Cog):
                 avatar = discord.File(fp=buffer, filename='avatar.webp')
                 await ctx.send(content=f'{msg.display_name}\'s avatar:', file=avatar)
      
-    @avatar.error
+    @_avatar.error
     async def avatar_error(self, ctx, error):
         if isinstance(error, cmd.BadArgument) or isinstance(error, cmd.MissingRequiredArgument):
             await ctx.send("Input a valid ID, or mention a member (only one!).")

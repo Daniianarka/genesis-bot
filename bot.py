@@ -3,6 +3,7 @@ import asyncio
 import aiohttp
 import discord.ext.commands as cmd
 import os, sys, time
+import traceback as tb
 import json
 
 with open(os.path.join(sys.path[0], "config.json"), "r") as config:
