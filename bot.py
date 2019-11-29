@@ -32,13 +32,13 @@ class Genesis(cmd.Bot):
             return cmd.when_mentioned_or(*prefixes)(bot, message)
     
     ###########PROPERTY
-        
+     
     @property
     async def command_amount(self):
         await self.wait_until_ready()
         a = {x for x in super().walk_commands()}
         return len(a)
-        
+    
     @property
     async def user_command_amount(self):
         await self.wait_until_ready()
@@ -46,11 +46,10 @@ class Genesis(cmd.Bot):
         b = [] 
         for x in a:
             if x.cog:
-                if not x.cog.hidden:
+                if x.cog.qualified_name != "Jishaku":
                     b.append(x)
-                    continue
-                continue
-            b.append(x)
+            else:
+                b.append(x)
         return len(b)
             
     ###########BG TASKS
@@ -118,8 +117,6 @@ class Genesis(cmd.Bot):
             except Exception as e:
                 print(f'Something went wrong when trying to load extension {ext}: {e}')
         super().get_cog("Jishaku").retain=True
-        super().get_cog("Jishaku").hidden=True
-        super().get_cog("Jishaku").nsfw=False
         super().run(data['token'], reconnect=True)
             
                 

@@ -12,7 +12,6 @@ class Information(cmd.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.session = bot.session
-        self.hidden = False
         self.nsfw = False
         
     @cmd.group(name="user")
@@ -33,7 +32,7 @@ class Information(cmd.Cog):
         members = [x for x in g.members if not x.bot]
         bots = list(set(g.members) - set(members))
         e = discord.Embed(title="SERVER INFO", color=discord.Colour.from_hsv(random.random(), 1, 1))
-        e.set_thumbnail(url=g.icon_url)
+        e.set_thumbnail(url=g.icon_url_as(format='png'))
         e.add_field(name="Name", value=g.name)
         e.add_field(name="Owner", value=g.owner)
         e.add_field(name="Created at", value=g.created_at.replace(microsecond=0), inline=False)
@@ -50,27 +49,28 @@ class Information(cmd.Cog):
         """Displays info about me~"""
         color = ctx.me.color if ctx.guild else discord.Colour.from_hsv(random.random(), 1, 1)
         e = discord.Embed(title=str(self.bot.user), color=color)
-        e.set_thumbnail(url=self.bot.user.avatar_url)
+        e.set_thumbnail(url=self.bot.user.avatar_url_as(format='png'))
         if isinstance(ctx.channel, discord.DMChannel) or not ctx.me.nick:
             nick = "None"
         else:
             nick = ctx.me.nick
+        comam = await self.bot.user_command_amount
         e.add_field(name="Nickname", value=nick)
         e.add_field(name="ID", value=ctx.bot.user.id)
         e.add_field(name="Created at", value=self.bot.user.created_at.replace(microsecond=0), inline=False)
         e.add_field(name="Servers", value=len(self.bot.guilds))
         e.add_field(name="Members", value=len(self.bot.users))
         e.add_field(name="Emotes available", value=len(self.bot.emojis))
-        e.add_field(name="Commands available", value=self.bot.user_command_amount)
+        e.add_field(name="Commands available", value=comam)
         e.add_field(name="GitHub repo", value=f"[Click here!]({self.bot.url})", inline=False)
         e.add_field(name="Owner", value = f"{self.bot.dev_user} ({self.bot.dev})")
         await ctx.send(embed=e)
 
     @_user.command(name="info")
-    async def user_info(self, ctx, *, author: converters.CustomUser = None):
+    async def user_info(self, ctx, *, user: converters.CustomUser = None):
         """Sends general info about the author, or a selected user/ID."""
-        author = ctx.author if not author else author
-        avatar = author.avatar_url
+        author = ctx.author if not user else user
+        avatar = author.avatar_url_as(format='png')
         avatar = author.default_avatar_url if not avatar else avatar
         if isinstance(author, discord.Member):
             nick = author.display_name
@@ -107,18 +107,13 @@ class Information(cmd.Cog):
         await ctx.send(embed=e)
 
     @_user.command(name="avatar", aliases=["pfp", "pic"])
-    async def _avatar(self, ctx, *, msg: converters.CustomUser = None):
+    async def _avatar(self, ctx, *, user: converters.CustomUser = None):
         """Messages a member's (or the author's) avatar back."""
-        if msg is None:
-            async with self.session.get(str(ctx.author.avatar_url)) as resp:
-                buffer = BytesIO(await resp.read())
-                avatar = discord.File(fp=buffer, filename='avatar.webp')
-                await ctx.send(content=f'{ctx.author}\'s avatar:', file=avatar)
-        else:
-            async with self.session.get(str(msg.avatar_url)) as resp:
-                buffer = BytesIO(await resp.read())
-                avatar = discord.File(fp=buffer, filename='avatar.webp')
-                await ctx.send(content=f'{msg.display_name}\'s avatar:', file=avatar)
+        msg = ctx.author if user is none else user
+        avatar = msg.avatar_url_as(format='png')
+        buffer = BytesIO(await avatar.read())
+        avatar = discord.File(fp=buffer, filename='avatar.png')
+        await ctx.send(content=f'{msg.display_name}\'s avatar:', file=avatar)
      
     @_avatar.error
     async def avatar_error(self, ctx, error):
