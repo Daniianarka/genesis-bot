@@ -63,7 +63,7 @@ class Information(cmd.Cog):
         e.add_field(name="Emotes available", value=len(self.bot.emojis))
         e.add_field(name="Commands available", value=self.bot.user_command_amount)
         e.add_field(name="GitHub repo", value=f"[Click here!]({self.bot.url})", inline=False)
-        e.add_field(name="Owner", value = f")
+        e.add_field(name="Owner", value = f"{self.bot.dev_user} ({self.bot.dev})")
         await ctx.send(embed=e)
 
     @_user.command(name="info")

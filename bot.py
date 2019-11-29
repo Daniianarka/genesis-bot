@@ -138,6 +138,13 @@ async def ping(ctx):
         tytimend = time.perf_counter()
         tydur = (tytimend -tytime) * 1000
         await m.edit(content=f'Pong!\nMessage send time = {duration:.2f}ms\nBot latency = {gen.latency*1000:.2f}\nCommand call time = {tydur:.2f}\nAverage = {((duration+tydur+ gen.latency*1000)/3):.2f}')
-        
+
+@gen.command(name="shutdown")
+@cmd.is_owner()
+async def _shutdown(ctx):
+    """Alias for jsk shutdown."""
+    await ctx.invoke(gen.get_command("jsk shutdown"))
+
+
 if __name__ == "__main__":
     gen.run()
