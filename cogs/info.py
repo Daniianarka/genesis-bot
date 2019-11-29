@@ -12,6 +12,8 @@ class Information(cmd.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.session = bot.session
+        self.hidden = False
+        self.nsfw = False
         
     @cmd.group(name="user")
     async def _user(self, ctx):
@@ -49,14 +51,19 @@ class Information(cmd.Cog):
         color = ctx.me.color if ctx.guild else discord.Colour.from_hsv(random.random(), 1, 1)
         e = discord.Embed(title=str(self.bot.user), color=color)
         e.set_thumbnail(url=self.bot.user.avatar_url)
-        nick = "None" if not ctx.me.nick else ctx.me.nick
+        if isinstance(ctx.channel, discord.DMChannel) or not ctx.me.nick:
+            nick = "None"
+        else:
+            nick = ctx.me.nick
         e.add_field(name="Nickname", value=nick)
         e.add_field(name="ID", value=ctx.bot.user.id)
         e.add_field(name="Created at", value=self.bot.user.created_at.replace(microsecond=0), inline=False)
         e.add_field(name="Servers", value=len(self.bot.guilds))
         e.add_field(name="Members", value=len(self.bot.users))
         e.add_field(name="Emotes available", value=len(self.bot.emojis))
-        e.add_field(name="GitHub repo", value=self.bot.url, inline=False)
+        e.add_field(name="Commands available", value=self.bot.user_command_amount)
+        e.add_field(name="GitHub repo", value=f"[Click here!]({self.bot.url})", inline=False)
+        e.add_field(name="Owner", value = f")
         await ctx.send(embed=e)
 
     @_user.command(name="info")
@@ -96,7 +103,7 @@ class Information(cmd.Cog):
         e.add_field(name="User or Member?", value=r, inline=False)
         e.add_field(name="Top role", value=tr)
         e.add_field(name="Admin?", value=adm)
-        e.add_field(name="Avatar URL", value=str(avatar), inline=False)
+        e.add_field(name="Avatar URL", value=f"[Click here!]({avatar})", inline=False)
         await ctx.send(embed=e)
 
     @_user.command(name="avatar", aliases=["pfp", "pic"])

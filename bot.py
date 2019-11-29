@@ -38,6 +38,20 @@ class Genesis(cmd.Bot):
         await self.wait_until_ready()
         a = {x for x in super().walk_commands()}
         return len(a)
+        
+    @property
+    async def user_command_amount(self):
+        await self.wait_until_ready()
+        a = {x for x in super().walk_commands() if not x.hidden}
+        b = [] 
+        for x in a:
+            if x.cog:
+                if not x.cog.hidden:
+                    b.append(x)
+                    continue
+                continue
+            b.append(x)
+        return len(b)
             
     ###########BG TASKS
         
@@ -48,7 +62,7 @@ class Genesis(cmd.Bot):
                    f'{len(super().guilds)} guild(s) ;w;',
                    f'Created in {super().user.created_at.strftime("%Y-%m-%d")}',
                    f'@{super().user.name} help (or gen help)',
-                   f'Made in discord.py v{discord.__version__} by Bell ✭ ☆#5144']
+                   f'Made in discord.py v{discord.__version__} by {self.dev_user}']
         n = 0
         m = 0
         while not self.is_closed():
@@ -66,6 +80,7 @@ class Genesis(cmd.Bot):
         
     async def on_ready(self):
         ownerdata = super().get_user(self.dev)
+        self.dev_user = ownerdata
         print('Logged in as {0}'.format(super().user))
         print("Developed by ", ownerdata)
         print(f"Using discord.py v{discord.__version__}")
@@ -83,7 +98,7 @@ class Genesis(cmd.Bot):
         e.add_field(name="Owner", value=f"{guild.owner} | {guild.owner.id}", inline=False)
         if guild.icon_url:
             e.set_image(url=guild.icon_url)
-        await (super().get_user(self.dev)).send(embed=e)
+        await self.dev_user.send(embed=e)
             
     ###########METHODS
    
@@ -113,6 +128,7 @@ gen = Genesis()
 
 @gen.command() 
 async def ping(ctx):
+    """Latency and response test."""
     tytime = time.perf_counter()
     async with ctx.channel.typing():
         start = time.perf_counter()
