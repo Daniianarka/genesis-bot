@@ -10,7 +10,7 @@ class Admin(cmd.Cog):
         
     @cmd.command(name="hackban", aliases=['hb'])
     @cmd.guild_only()
-    def _hackban(self, ctx, id):
+    async def _hackban(self, ctx, id):
         """Useful for banning people not on the currect guild."""
         await ctx.guild.ban(discord.Object(id=id))
         
